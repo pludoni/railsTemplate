@@ -1,0 +1,199 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<project>
+  <actions/>
+  <description></description>
+  <logRotator>
+    <daysToKeep>14</daysToKeep>
+    <numToKeep>-1</numToKeep>
+    <artifactDaysToKeep>-1</artifactDaysToKeep>
+    <artifactNumToKeep>-1</artifactNumToKeep>
+  </logRotator>
+  <keepDependencies>false</keepDependencies>
+  <properties>
+    <de.pellepelster.jenkins.walldisplay.WallDisplayJobProperty/>
+  </properties>
+  <scm class="hudson.plugins.git.GitSCM">
+    <configVersion>2</configVersion>
+    <userRemoteConfigs>
+      <hudson.plugins.git.UserRemoteConfig>
+        <name></name>
+        <refspec></refspec>
+        <url>git://example.com/git.git</url>
+      </hudson.plugins.git.UserRemoteConfig>
+    </userRemoteConfigs>
+    <branches>
+      <hudson.plugins.git.BranchSpec>
+        <name>origin/master</name>
+      </hudson.plugins.git.BranchSpec>
+    </branches>
+    <disableSubmodules>false</disableSubmodules>
+    <recursiveSubmodules>false</recursiveSubmodules>
+    <doGenerateSubmoduleConfigurations>false</doGenerateSubmoduleConfigurations>
+    <authorOrCommitter>false</authorOrCommitter>
+    <clean>false</clean>
+    <wipeOutWorkspace>false</wipeOutWorkspace>
+    <pruneBranches>false</pruneBranches>
+    <remotePoll>false</remotePoll>
+    <ignoreNotifyCommit>false</ignoreNotifyCommit>
+    <buildChooser class="hudson.plugins.git.util.DefaultBuildChooser"/>
+    <gitTool>Default</gitTool>
+    <submoduleCfg class="list"/>
+    <relativeTargetDir></relativeTargetDir>
+    <reference></reference>
+    <excludedRegions></excludedRegions>
+    <excludedUsers></excludedUsers>
+    <gitConfigName></gitConfigName>
+    <gitConfigEmail></gitConfigEmail>
+    <skipTag>false</skipTag>
+    <includedRegions></includedRegions>
+    <scmName></scmName>
+  </scm>
+  <canRoam>true</canRoam>
+  <disabled>false</disabled>
+  <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
+  <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
+  <triggers class="vector"/>
+  <concurrentBuild>false</concurrentBuild>
+  <builders>
+    <hudson.tasks.Shell>
+      <command>echo &quot;============================= bundle/migration =============================&quot;
+gem install bundler
+bundle
+bundle exec rake db:migrate
+bundle exec rake db:test:prepare</command>
+    </hudson.tasks.Shell>
+    <hudson.tasks.Shell>
+      <command>echo &quot;============================= Tests =============================&quot;
+bundle exec rake ci:setup:rspec spec</command>
+    </hudson.tasks.Shell>
+    <hudson.tasks.Shell>
+      <command>echo &quot;============================= Brakeman =============================&quot;
+bash -l -c &apos;rvm use 1.9.3 &amp;&amp;
+  gem install brakeman --no-ri --no-rdoc &amp;&amp;
+  brakeman -o brakeman-output.tabs --no-progress --separate-models&apos;
+
+echo &quot;============================= Documentation =============================&quot;
+bundle exec yardoc
+
+echo &quot;============================= Rails Best Practices ======================&quot;
+mkdir -p rpb
+# always return 0 = true; rbp will return the number of errors instead, which will fail the build
+bundle exec rails_best_practices -f html  --silent --output-file rpb/index.html || true</command>
+    </hudson.tasks.Shell>
+    <hudson.tasks.Shell>
+      <command>bundle exec cap deploy</command>
+    </hudson.tasks.Shell>
+  </builders>
+  <publishers>
+    <hudson.plugins.brakeman.BrakemanPublisher>
+      <healthy></healthy>
+      <unHealthy></unHealthy>
+      <thresholdLimit>low</thresholdLimit>
+      <pluginName>[BRAKEMAN] </pluginName>
+      <defaultEncoding>UTF-8</defaultEncoding>
+      <canRunOnFailed>false</canRunOnFailed>
+      <useDeltaValues>false</useDeltaValues>
+      <thresholds>
+        <unstableTotalAll></unstableTotalAll>
+        <unstableTotalHigh></unstableTotalHigh>
+        <unstableTotalNormal></unstableTotalNormal>
+        <unstableTotalLow></unstableTotalLow>
+        <failedTotalAll></failedTotalAll>
+        <failedTotalHigh></failedTotalHigh>
+        <failedTotalNormal></failedTotalNormal>
+        <failedTotalLow></failedTotalLow>
+      </thresholds>
+      <shouldDetectModules>false</shouldDetectModules>
+      <dontComputeNew>true</dontComputeNew>
+      <doNotResolveRelativePaths>false</doNotResolveRelativePaths>
+      <outputFile>brakeman-output.tabs</outputFile>
+    </hudson.plugins.brakeman.BrakemanPublisher>
+    <htmlpublisher.HtmlPublisher>
+      <reportTargets>
+        <htmlpublisher.HtmlPublisherTarget>
+          <reportName>Dokumentation</reportName>
+          <reportDir>doc</reportDir>
+          <reportFiles>index.html</reportFiles>
+          <keepAll>false</keepAll>
+          <wrapperName>htmlpublisher-wrapper.html</wrapperName>
+        </htmlpublisher.HtmlPublisherTarget>
+        <htmlpublisher.HtmlPublisherTarget>
+          <reportName>SimpleCov-Coverage</reportName>
+          <reportDir>coverage</reportDir>
+          <reportFiles>index.html</reportFiles>
+          <keepAll>false</keepAll>
+          <wrapperName>htmlpublisher-wrapper.html</wrapperName>
+        </htmlpublisher.HtmlPublisherTarget>
+        <htmlpublisher.HtmlPublisherTarget>
+          <reportName>Rails-Best-Practices</reportName>
+          <reportDir>rpb</reportDir>
+          <reportFiles>index.html</reportFiles>
+          <keepAll>false</keepAll>
+          <wrapperName>htmlpublisher-wrapper.html</wrapperName>
+        </htmlpublisher.HtmlPublisherTarget>
+      </reportTargets>
+    </htmlpublisher.HtmlPublisher>
+    <hudson.plugins.rubyMetrics.railsStats.RailsStatsPublisher>
+      <rake>
+        <rakeInstallation>ruby-1.9.3-p194</rakeInstallation>
+        <rakeWorkingDir>.</rakeWorkingDir>
+        <tasks>stats</tasks>
+        <silent>true</silent>
+      </rake>
+      <rakeInstallation>ruby-1.9.3-p194</rakeInstallation>
+      <rakeWorkingDir>.</rakeWorkingDir>
+      <task>stats</task>
+    </hudson.plugins.rubyMetrics.railsStats.RailsStatsPublisher>
+    <hudson.plugins.rubyMetrics.rcov.RcovPublisher>
+      <reportDir>coverage/rcov</reportDir>
+      <targets>
+        <hudson.plugins.rubyMetrics.rcov.model.MetricTarget>
+          <metric>TOTAL_COVERAGE</metric>
+          <healthy>40</healthy>
+          <unhealthy>0</unhealthy>
+          <unstable>0</unstable>
+        </hudson.plugins.rubyMetrics.rcov.model.MetricTarget>
+        <hudson.plugins.rubyMetrics.rcov.model.MetricTarget>
+          <metric>CODE_COVERAGE</metric>
+          <healthy>40</healthy>
+          <unhealthy>0</unhealthy>
+          <unstable>0</unstable>
+        </hudson.plugins.rubyMetrics.rcov.model.MetricTarget>
+      </targets>
+    </hudson.plugins.rubyMetrics.rcov.RcovPublisher>
+    <hudson.tasks.junit.JUnitResultArchiver>
+      <testResults>spec/reports/*.xml</testResults>
+      <keepLongStdio>false</keepLongStdio>
+      <testDataPublishers/>
+    </hudson.tasks.junit.JUnitResultArchiver>
+    <hudson.plugins.jabber.im.transport.JabberPublisher>
+      <targets>
+        <hudson.plugins.im.GroupChatIMMessageTarget>
+          <name>pludoni@conference.empfehlungsbund.de</name>
+          <notificationOnly>false</notificationOnly>
+        </hudson.plugins.im.GroupChatIMMessageTarget>
+      </targets>
+      <strategy>ALL</strategy>
+      <notifyOnBuildStart>false</notifyOnBuildStart>
+      <notifySuspects>false</notifySuspects>
+      <notifyCulprits>false</notifyCulprits>
+      <notifyFixers>false</notifyFixers>
+      <notifyUpstreamCommitters>false</notifyUpstreamCommitters>
+      <buildToChatNotifier class="hudson.plugins.im.build_notify.DefaultBuildToChatNotifier"/>
+      <matrixMultiplier>ONLY_CONFIGURATIONS</matrixMultiplier>
+    </hudson.plugins.jabber.im.transport.JabberPublisher>
+  </publishers>
+  <buildWrappers>
+    <hudson.plugins.ansicolor.AnsiColorBuildWrapper>
+      <colorMapName>xterm</colorMapName>
+    </hudson.plugins.ansicolor.AnsiColorBuildWrapper>
+    <ruby-proxy-object>
+      <ruby-object ruby-class="Jenkins::Plugin::Proxies::BuildWrapper" pluginid="rvm">
+        <pluginid pluginid="rvm" ruby-class="String">rvm</pluginid>
+        <object ruby-class="RvmWrapper" pluginid="rvm">
+          <impl pluginid="rvm" ruby-class="String">1.9.3</impl>
+        </object>
+      </ruby-object>
+    </ruby-proxy-object>
+  </buildWrappers>
+</project>

@@ -5,6 +5,17 @@ Used at work.
 ## Install Jenkins and prepare Ruby Environment
 
 ```shell
+# Jenkins:
+
+wget -q -O - http://pkg.jenkins-ci.org/debian/jenkins-ci.org.key | apt-key add -
+# Then add the following entry in your /etc/apt/sources.list:
+echo "deb http://pkg.jenkins-ci.org/debian binary/" >> /etc/apt/sources.list
+apt-get update
+apt-get install jenkins
+
+# Jenkins will run on port :8080
+
+
 # Ubuntu RVM Reqs
 /usr/bin/apt-get install build-essential openssl libreadline6 libreadline6-dev curl git-core zlib1g zlib1g-dev libssl-dev libyaml-dev libsqlite3-dev sqlite3 libxml2-dev libxslt-dev autoconf libc6-dev ncurses-dev automake libtool bison subversion
 

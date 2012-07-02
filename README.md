@@ -27,6 +27,15 @@ apt-get install libqt4-dev libqtwebkit-dev
 # redis
 apt-get install redis-server
 
+# phantomjs
+# find latest dynamic in http://code.google.com/p/phantomjs/downloads/list
+cd /usr/local/src/
+wget http://phantomjs.googlecode.com/files/phantomjs-1.6.0-linux-i686-dynamic.tar.bz2
+tar xf phantomjs-1.6.0-linux-i686-dynamic.tar.bz2 
+cd phantomjs-1.6.0-linux-i686-dynamic/
+ln -s /usr/local/src/phantomjs-1.6.0-linux-i686-dynamic/bin/phantomjs  /usr/local/bin/phantomjs
+
+
 # sphinx compiling
 cd /usr/local/src
 wget http://sphinxsearch.com/files/sphinx-2.0.4-release.tar.gz
